@@ -42,15 +42,40 @@ from cse351 import *
 # global
 call_count = 0
 
+class ServerCall(threading.Thread):
+    def __init__(self, url):
+        threading.Thread.__init__(self)
+        self.url = url
+        self.result = None
+
+    def run(self):
+        self.result = get_data_from_server(self.url)
+
+    def get_name(self):
+        return self.result['name']
+
 def get_urls(film6, kind):
     global call_count
-
+    
     urls = film6[kind]
     print(kind)
+
+    threads = []
+
     for url in urls:
-        call_count += 1
-        item = get_data_from_server(url)
-        print(f'  - {item["name"]}')
+        thread = ServerCall(url)
+        threads.append(thread)
+
+    call_count += len(urls)
+
+    for thread in threads:
+        thread.start()
+
+    for thread in threads:
+        thread.join()
+    
+    for thread in threads:
+        print(f'  - {thread.get_name()}')
 
 def main():
     global call_count
